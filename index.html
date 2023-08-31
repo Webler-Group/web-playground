@@ -77,6 +77,12 @@
 
             }
 
+            contentWindow.onerror = (message, url, line, column) => {
+
+                pushToConsole(message, "error");
+                
+            }
+
             var console = (function (systemConsole) {
 
 
