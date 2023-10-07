@@ -1,297 +1,114 @@
-<!doctype html>
-
+<!DOCTYPE HTML>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-
     <style>
         * {
-
             margin: 0;
-
             padding: 0;
-
             height: 100%;
-
         }
-
         #inside-iframe {
-
             user-select: none;
-
+            -webkit-user-select: none;
             height: 100%;
-
             width: 100%;
-
-            display: -webkit-box;
-
-            display: -ms-flexbox;
-
             display: flex;
-
         }
     </style>
-
 </head>
-
 <body>
-
     <iframe id="inside-iframe" style="border: none"></iframe>
-
     <script>
-
-        var iframeId = 'inside-iframe';
-
-
+        let iframeId = 'inside-iframe';
         function initIframe(contentWindow) {
-
-            var pushToConsole = (payload, type) => {
-
-
+            let pushToConsole = (payload, type) => {
                 parent.postMessage({
-
-
                     console: {
-
-
                         data: payload,
-
-
                         method: type
-
-
                     }
-
-
                 }, "*")
-
-
             }
-
             contentWindow.onerror = (message, url, line, column) => {
-
                 pushToConsole(message, "error");
-                
             }
-
-            var console = (function (systemConsole) {
-
-
+            let console = (function (systemConsole) {
                 return {
-
-
                     log: function () {
-
-
-                        var args = Array.from(arguments)
-
-
+                        let args = Array.from(arguments)
                         pushToConsole(args, "log")
-
-
                         systemConsole.log.apply(this, args)
-
-
                     },
-
-
                     info: function () {
-
-
-                        var args = Array.from(arguments)
-
-
+                        let args = Array.from(arguments)
                         pushToConsole(args, "info")
-
-
                         systemConsole.info.apply(this, args)
-
-
                     },
-
-
                     warn: function () {
-
-
-                        var args = Array.from(arguments)
-
-
+                        let args = Array.from(arguments)
                         pushToConsole(args, "warn")
-
-
                         systemConsole.warn.apply(this, args)
-
-
                     },
-
-
                     error: function () {
-
-
-                        var args = Array.from(arguments)
-
-
+                        let args = Array.from(arguments)
                         pushToConsole(args, "error")
-
-
                         systemConsole.error.apply(this, args)
-
-
                     },
-
-
                     clear: function () {
-
                         pushToConsole(null, "error")
-
                         systemConsole.clear.apply(this, {})
-
-
                     },
-
-
                     time: function () {
-
-
-                        var args = Array.from(arguments)
-
-
+                        let args = Array.from(arguments)
                         systemConsole.time.apply(this, args)
-
-
                     },
-
-
                     assert: function (assertion, label) {
-
-
                         if (!assertion) {
-
-
                             pushToConsole(label, "error")
-
-
                         }
-
-
-
-                        var args = Array.from(arguments)
-
-
+                        let args = Array.from(arguments)
                         systemConsole.assert.apply(this, args)
-
-
                     }
-
-
                 }
-
-
             }(window.console))
-
             contentWindow.console = { ...contentWindow.console, ...console };
-
         }
-
-
         function getDomain(url, subdomain) {
-
-
             subdomain = subdomain || false;
-
-
-
             url = url.replace(/(https?:\/\/)?(www.)?/i, '');
-
-
-
             if (!subdomain) {
-
-
                 url = url.split('.');
-
-
-
                 url = url.slice(url.length - 2).join('.');
-
-
             }
-
-
-
             if (url.indexOf('/') !== -1) {
-
-
                 return url.split('/')[0];
-
-
             }
-
-
-
             return url;
-
-
         }
-
-
         function getIframe() {
-
             return document.getElementById(iframeId);
-
         }
-
-
         function createIframe() {
-
-            var iframe = document.createElement('iframe');
-
+            let iframe = document.createElement('iframe');
             iframe.id = iframeId;
-
             iframe.style.border = 'none';
-
             document.body.appendChild(iframe);
-
         }
-
-
         function receiveMessage(event) {
-
             getIframe().remove();
-
             createIframe();
-
-            var iframe = getIframe();
-
+            let iframe = getIframe();
             initIframe(iframe.contentWindow);
-
-            var iframeDoc = iframe.contentDocument;
-
-
+            let iframeDoc = iframe.contentDocument;
             iframeDoc.open();
-
             iframeDoc.write(event.data);
-
             iframeDoc.close();
-
         }
-
-
         window.addEventListener('message', receiveMessage, false);
-
         initIframe(getIframe().contentWindow);
-
     </script>
-
 </body>
-
 </html>
