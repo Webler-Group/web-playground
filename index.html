@@ -1,15 +1,22 @@
 <!DOCTYPE HTML>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
+        html,
+        body {
+            touch-action: auto;
+        }
+
         * {
             margin: 0;
             padding: 0;
             height: 100%;
         }
+
         #inside-iframe {
             user-select: none;
             -webkit-user-select: none;
@@ -19,22 +26,55 @@
         }
     </style>
 </head>
+
 <body>
     <iframe id="inside-iframe" style="border: none"></iframe>
     <script>
-        let iframeId = 'inside-iframe';
-        function initIframe(contentWindow) {
-            let pushToConsole = (payload, type) => {
-                parent.postMessage({
-                    console: {
-                        data: payload,
-                        method: type
+
+        function processPayload(item) {
+            if (typeof item === "function") {
+                return { __type: "function", __name: item.name };
+            }
+            if (typeof item === "symbol") {
+                return { __type: "symbol", __description: item.description }
+            }
+            if (typeof item === "object") {
+                if (item instanceof Array) {
+                    let arr = [];
+                    for (let elem of item) {
+                        arr.push(processPayload(elem));
                     }
-                }, "*")
+                    return arr;
+                }
+                if (item instanceof Object) {
+                    let obj = {};
+                    for (let entry of Object.entries(item)) {
+                        obj[entry[0]] = processPayload(elem);
+                    }
+                    return obj;
+                }
             }
-            contentWindow.onerror = (message, url, line, column) => {
+            return item
+        }
+
+        const iframeId = 'inside-iframe';
+
+        const pushToConsole = (payload, type) => {
+            parent.postMessage({
+                console: {
+                    data: processPayload(payload),
+                    method: type
+                }
+            }, "*")
+        }
+
+        function initIframe(contentWindow) {
+
+
+            /*contentWindow.onerror = (message, url, line, column) => {
                 pushToConsole(message, "error");
-            }
+            }*/
+
             let console = (function (systemConsole) {
                 return {
                     log: function () {
@@ -76,6 +116,7 @@
             }(window.console))
             contentWindow.console = { ...contentWindow.console, ...console };
         }
+
         function getDomain(url, subdomain) {
             subdomain = subdomain || false;
             url = url.replace(/(https?:\/\/)?(www.)?/i, '');
@@ -88,15 +129,19 @@
             }
             return url;
         }
+
         function getIframe() {
             return document.getElementById(iframeId);
         }
+
         function createIframe() {
             let iframe = document.createElement('iframe');
             iframe.id = iframeId;
             iframe.style.border = 'none';
+            iframe.onload = setIframeFocus;
             document.body.appendChild(iframe);
         }
+
         function receiveMessage(event) {
             getIframe().remove();
             createIframe();
@@ -104,11 +149,30 @@
             initIframe(iframe.contentWindow);
             let iframeDoc = iframe.contentDocument;
             iframeDoc.open();
+            iframe.contentWindow.onerror = function (message) {
+                pushToConsole([message], "error")
+            }
             iframeDoc.write(event.data);
             iframeDoc.close();
         }
+
+        function isSafari() {
+            var ua = navigator.userAgent.toLowerCase();
+            return ((ua.indexOf('safari') != -1) && (ua.indexOf('chrome') === -1));
+        }
+
+        function setIframeFocus() {
+            this.focus();
+            if (isSafari()) {
+                window.setTimeout(function () {
+                    this.contentWindow.focus();
+                }, 100)
+            }
+        }
+
         window.addEventListener('message', receiveMessage, false);
         initIframe(getIframe().contentWindow);
     </script>
 </body>
+
 </html>
