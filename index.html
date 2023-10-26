@@ -46,10 +46,10 @@
                     }
                     return arr;
                 }
-                if (item instanceof Object) {
+                if (item.constructor.name === "Object") {
                     let obj = {};
                     for (let entry of Object.entries(item)) {
-                        obj[entry[0]] = processPayload(elem);
+                        obj[entry[0]] = processPayload(entry[1]);
                     }
                     return obj;
                 }
