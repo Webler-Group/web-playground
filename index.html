@@ -41,12 +41,15 @@
             if (typeof item === "object") {
                 if (item === null) return null;
 
-                if (item instanceof Array) {
+                if (Array.isArray(item)) {
                     let arr = [];
                     for (let elem of item) {
                         arr.push(processPayload(elem));
                     }
                     return arr;
+                }
+                if(item.constructor.name === "Date" || item.constructor.name === "RegExp") {
+                    return item;
                 }
                 if (item.constructor.name === "Object") {
                     let obj = {};
@@ -54,9 +57,6 @@
                         obj[entry[0]] = processPayload(entry[1]);
                     }
                     return obj;
-                }
-                if(item instanceof Date || item instanceof RegExp) {
-                    return item;
                 }
                 return { __type: "object", __constructor: item.constructor.name };
             }
