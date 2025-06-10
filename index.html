@@ -48,15 +48,19 @@
                     }
                     return arr;
                 }
-                if (item && item.constructor && item.constructor.name === "Object") {
+                if (item.constructor.name === "Object") {
                     let obj = {};
                     for (let entry of Object.entries(item)) {
                         obj[entry[0]] = processPayload(entry[1]);
                     }
                     return obj;
                 }
+                if(item instanceof Date || item instanceof RegExp) {
+                    return item;
+                }
+                return { __type: "object", __constructor: item.constructor.name };
             }
-            return item
+            return item;
         }
 
         const iframeId = 'inside-iframe';
